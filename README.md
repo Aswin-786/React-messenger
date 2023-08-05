@@ -2,7 +2,7 @@
 
 Chatly is a real-time messaging app built using React, Firebase Auth, Firebase Firestore, and Realtime Firebase Database. Users can create an account, search for other users, and start a conversation with them. The app supports text messages, images, and emojis.
 
-Live: https://chatly.aswinkrishna.com/
+Visit the [Live Demo](https://chatly.aswinkrishna.com/)
 
 ## Features
 
