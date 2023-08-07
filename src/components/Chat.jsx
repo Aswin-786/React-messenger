@@ -1,17 +1,20 @@
-import React from 'react'
-import Messages from './Messages'
-import { ChatContext } from '../store/ChatContext'
-import { useHistory } from 'react-router-dom'
-import { Tooltip as ReactTooltip } from 'react-tooltip'
+import React, { useContext } from 'react';
+import { useHistory } from 'react-router-dom';
+import { Tooltip as ReactTooltip } from 'react-tooltip';
+import Messages from './Messages';
+import { ChatContext } from '../store/ChatContext';
 
 const Chat = () => {
-  const { data } = React.useContext(ChatContext)
-  const history = useHistory()
+  // Accessing data from ChatContext using useContext hook
+  const { data } = useContext(ChatContext);
 
-  // back to home
+  // Access the history object using useHistory hook
+  const history = useHistory();
+
+  // Function to navigate back to home
   const handleHome = () => {
-    history.push('/')
-  }
+    history.push('/');
+  };
 
   return (
     <div className='flex-[2] relative h-full'>
