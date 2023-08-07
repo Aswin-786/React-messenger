@@ -1,39 +1,52 @@
-import React from 'react'
-import { AuthContext, FirebaseContext } from '../store/Context'
-import { ChatContext } from '../store/ChatContext'
-import { useHistory } from 'react-router-dom'
+import React, { useContext, useEffect, useState } from 'react';
+import { useHistory } from 'react-router-dom';
+import { AuthContext, FirebaseContext } from '../store/Context';
+import { ChatContext } from '../store/ChatContext';
 
 const Chats = () => {
+  // Access FirebaseContext, AuthContext, and ChatContext using useContext hook
+  const { firebase } = useContext(FirebaseContext);
+  const { currentUser } = useContext(AuthContext);
+  const { dispatch } = useContext(ChatContext);
 
-  const { firebase } = React.useContext(FirebaseContext)
-  const { currentUser } = React.useContext(AuthContext)
-  const { dispatch } = React.useContext(ChatContext)
-  const [chats, setChats] = React.useState([])
-  const history = useHistory()
+  // Declare the state variable 'chats' using useState hook
+  const [chats, setChats] = useState([]);
 
-  // update state when current user changes
-  React.useEffect(() => {
+  // Access the history object using useHistory hook
+  const history = useHistory();
+
+  // Update state when the current user changes
+  useEffect(() => {
     const getChats = () => {
-      const unsub = firebase.firestore().collection('userChat').doc(currentUser._delegate.uid).onSnapshot((doc) => {
-        setChats(doc.data())
-      })
+      // Fetch chats from Firestore based on the current user's uid
+      const unsub = firebase
+        .firestore()
+        .collection('userChat')
+        .doc(currentUser?.uid ?? '') // Use the nullish coalescing operator to handle currentUser being null or undefined
+        .onSnapshot((doc) => {
+          setChats(doc.data());
+        });
+
       return () => {
-        unsub()
-      }
+        unsub();
+      };
+    };
+
+    // Only fetch chats if the current user is available
+    if (currentUser?.uid) {
+      getChats();
     }
-    // only fetch chats if current user is available
-    currentUser._delegate.uid && getChats()
-  }, [firebase, currentUser._delegate.uid])
+  }, [firebase, currentUser?.uid]); // Use currentUser?.uid to prevent the useEffect from running when currentUser is null or undefined
 
-  // selecting a chat user
+  // Function to handle selecting a chat user
   const handleSelect = (u) => {
-    dispatch({ type: "CHANGE_USER", payload: u })
-  }
+    dispatch({ type: 'CHANGE_USER', payload: u });
+  };
 
-  // navigate to the chat page
+  // Function to navigate to the chat page
   const show = () => {
-    history.push('/chat')
-  }
+    history.push('/chat');
+  };
 
   return (
 
