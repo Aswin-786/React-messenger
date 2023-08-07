@@ -1,43 +1,48 @@
-import React from 'react'
-import { AuthContext, FirebaseContext } from '../store/Context'
-import { ChatContext } from '../store/ChatContext'
-import { Tooltip as ReactTooltip } from 'react-tooltip'
-import { v4 as uuid } from 'uuid'
-import Picker from 'emoji-picker-react'
+import React, { useState, useContext } from 'react';
+import { AuthContext, FirebaseContext } from '../store/Context';
+import { ChatContext } from '../store/ChatContext';
+import { Tooltip as ReactTooltip } from 'react-tooltip';
+import { v4 as uuid } from 'uuid';
+import Picker from 'emoji-picker-react';
 
 const Input = () => {
-  const [text, setText] = React.useState("")
-  const [img, setImg] = React.useState(null)
-  const [showPicker, setShowPicker] = React.useState(false)
-  const { currentUser } = React.useContext(AuthContext)
-  const { data } = React.useContext(ChatContext)
-  const { firebase } = React.useContext(FirebaseContext)
+  // State for input text and image
+  const [text, setText] = useState('');
+  const [img, setImg] = useState(null);
+  const [showPicker, setShowPicker] = useState(false);
 
-  // to handle send button click
+  // Accessing currentUser and data from AuthContext and ChatContext using useContext hook
+  const { currentUser } = useContext(AuthContext);
+  const { data } = useContext(ChatContext);
+
+  // Accessing firebase from FirebaseContext using useContext hook
+  const { firebase } = useContext(FirebaseContext);
+
+  // Function to handle send button click
   const handleSend = () => {
-
-    // if there is text or image to send
-    if ((text.length > 0) || img) {
-      const res = firebase.firestore().collection('chats').doc(data.chatId)
+    // If there is text or image to send
+    if (text.length > 0 || img) {
+      const res = firebase.firestore().collection('chats').doc(data.chatId);
 
       // If there is an image to send
       if (img) {
-        firebase.storage().ref(`${uuid()}/${img}`)
+        firebase
+          .storage()
+          .ref(`${uuid()}/${img}`)
           .put(img)
           .then(({ ref }) => {
-            ref.getDownloadURL()
-              .then((url) => {
-                res.update({
-                  messages: firebase.firestore.FieldValue.arrayUnion({
-                    id: uuid(),
-                    text,
-                    senderId: currentUser.uid,
-                    date: Date.now(),
-                    img: url
-                  }),
-                })
-              })
-          })
+            ref.getDownloadURL().then((url) => {
+              res.update({
+                messages: firebase.firestore.FieldValue.arrayUnion({
+                  id: uuid(),
+                  text,
+                  senderId: currentUser.uid,
+                  date: Date.now(),
+                  img: url,
+                }),
+              });
+            });
+          });
       }
       // If there is only text to send
       else {
@@ -46,34 +51,39 @@ const Input = () => {
             id: uuid(),
             text,
             senderId: currentUser.uid,
-            date: Date.now()
+            date: Date.now(),
           }),
-        })
+        });
       }
 
       // Updating last message and date in userChat collection for both sender and receiver of the message
-      firebase.firestore().collection('userChat').doc(currentUser.uid).update({
-        [data.chatId + ".lastMessage"]: {
+      const updateChatDate = {
+        [data.chatId + '.lastMessage']: {
           text,
         },
-        [data.chatId + ".date"]: firebase.firestore.FieldValue.serverTimestamp()
-      })
-      firebase.firestore().collection('userChat').doc(data.user.uid).update({
-        [data.chatId + ".lastMessage"]: {
-          text,
-        },
-        [data.chatId + ".date"]: firebase.firestore.FieldValue.serverTimestamp()
-      })
+        [data.chatId + '.date']: firebase.firestore.FieldValue.serverTimestamp(),
+      };
+
+      firebase
+        .firestore()
+        .collection('userChat')
+        .doc(currentUser.uid)
+        .update(updateChatDate);
+      firebase
+        .firestore()
+        .collection('userChat')
+        .doc(data.user.uid)
+        .update(updateChatDate);
     }
 
     // Resetting after sending messages
-    setText('')
-    setImg(null)
-  }
+    setText('');
+    setImg(null);
+  };
 
-  // to handle emoji selection
+  // Function to handle emoji selection
   const onEmojiClick = (event, emojiObject) => {
-    setText(prevInput => prevInput + event.emoji);
+    setText((prevInput) => prevInput + event.emoji);
     setShowPicker(false);
   };
 
